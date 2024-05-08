@@ -1,0 +1,112 @@
+---
+title: "Plotting Fiordland 2024 BRUVs"
+author: "Adam Smith"
+format: 
+  html:
+    toc: true
+---
+
+## Setup
+
+```{r}
+#| output: false
+library(googlesheets4)
+library(sf)
+library(sfheaders)
+library(tidyverse)
+library(southernMaps)
+library(mapview)
+library(terra)
+library(rcartocolor)
+theme_set(theme_bw())
+```
+
+## Load NZ coastline data
+
+... and convert to `sf` object.
+
+```{r}
+nztm <- detailed_nz_islands |> st_as_sf()
+```
+
+## Marine reserves data
+
+```{r}
+load(file = "data/mr_fiordland.Rdata")
+```
+
+## BRUV data
+
+### Load from Google Sheet
+
+... and convert to `sf` object.
+
+```{r}
+#| output: false
+fld24 <- read_sheet(
+  "https://docs.google.com/spreadsheets/d/1IQfLTiWTQnTGynuF7fUu8htJxKZuIVJw4OK6y9qRfU8",
+  sheet="FLD24") |> 
+  mutate(Depth = coalesce(`Depth sensor`,`Depth sounder`)) |> 
+  st_as_sf(coords = c('Longitude','Latitude'), crs=4326)
+```
+
+```{r}
+mapview(fld24)
+```
+
+```{r}
+map_fiordland24 <- fld24 |> 
+  mutate(Depth = -Depth) |> 
+  mapview(zcol="Depth", layer.name = "BRUV drops (Depth)") +
+  mapview(mr_fiordland |> 
+            filter(Name %in% c(
+              "Moana Uta (Wet Jacket Arm) Marine Reserve",
+              "Taumoana (Five Finger Peninsula) Marine Reserve"
+              )), 
+          layer.name = "Marine Reserves", 
+          col.region = "yellow")
+
+map_fiordland24
+```
+
+```{r}
+saveRDS( map_fiordland24, "maps/map_fiordland24.rds")
+mapshot(map_fiordland24, url = "maps/map_fiordland24.html")
+```
+
+```{r}
+nrow(fld24)
+
+fld24 |> 
+  group_by(Quality) |> 
+  summarise(n = n())
+```
+
+```{r}
+fld24 |> 
+  group_by(`Repeat site from previous campaign`) |> 
+  summarise(n = n())
+```
+
+```{r}
+fld24 |> summarise(
+  min = min(Depth),
+  max = max(Depth),
+  mean = mean(Depth),
+  median = median(Depth)
+  )
+```
+
+```{r}
+fld24 |> ggplot() + aes(x=Depth) + geom_histogram()
+```
+
+## Depths
+
+```{r}
+fld24 |> 
+  ggplot() +
+  aes(x = `Depth sounder`, y = `Depth sensor`) +
+  geom_point() +
+  geom_abline(slope=1, intercept = 0)
+```
