@@ -17,7 +17,9 @@ library(tidyverse)
 library(southernMaps)
 library(mapview)
 library(terra)
+library(tidyterra)
 library(rcartocolor)
+library(ggnewscale)
 theme_set(theme_bw())
 ```
 
@@ -110,3 +112,41 @@ fld24 |>
   geom_point() +
   geom_abline(slope=1, intercept = 0)
 ```
+
+## Mappy map map
+
+```{r}
+bathy_tamatea <- readRDS("data/bathy_tamatea.rds")
+```
+
+```{r}
+lim_tamatea_nzmg <- ext( c(2000000, 2042000, 5464000, 5488000) )
+```
+
+```{r}
+ggplot() +
+  
+  geom_spatraster(data = bathy_tamatea) +
+  
+  geom_sf(
+    data = mr_fiordland, 
+    fill = "yellow", col = NA, alpha = .3
+    ) +
+  
+  geom_sf(data = nztm, fill='grey40', colour=NA) +
+  
+  geom_sf(
+    data = fld24,
+    size = 2
+  ) +
+  
+  scale_fill_hypso_c(name = "Depth (m)", palette="colombia_bathy") +
+  
+  new_scale_fill() +
+  
+  scale_x_continuous(limits = lim_tamatea_nzmg[1:2], 
+                     expand = c(0, 0)) +
+  scale_y_continuous(limits = lim_tamatea_nzmg[3:4], 
+                     expand = c(0, 0))
+```
+
