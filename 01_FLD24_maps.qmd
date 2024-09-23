@@ -125,7 +125,7 @@ lim_tamatea_nzmg <- ext( c(2000000, 2042000, 5464000, 5488000) )
 ```
 
 ```{r}
-ggplot() +
+ggmap_fld24 <- ggplot() +
   
   geom_spatraster(data = bathy_tamatea) +
   
@@ -150,6 +150,19 @@ ggplot() +
   scale_y_continuous(limits = lim_tamatea_nzmg[3:4], 
                      expand = c(0, 0)) +
   
-  annotation_scale()
+  annotation_scale(location = "br") +
+  
+  annotate("text", label = "Sea Through Science Ltd.")
+
+ggmap_fld24
+```
+```{r}
+mark <- png::readPNG("img/mark_blank.png") |> grid::rasterGrob(interpolate=TRUE)
+```
+```{r}
+ggmap_fld24 + 
+  annotation_custom(mark, xmin = 2031500, xmax = 2042000, ymin = 5464000, ymax = 5470000)
+
+ggsave("maps/ggmap_fld24.png", width = 10, height = 6, dpi = 300)
 ```
 
