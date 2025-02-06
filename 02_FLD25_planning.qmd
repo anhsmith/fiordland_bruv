@@ -50,6 +50,8 @@ strata <- st_read("data/FLD25_Strata.kml")
 ```{r}
 plot(strata)
 ```
+
+  
 ## Load mark
 
 ```{r}
@@ -173,14 +175,41 @@ fld24  |>
   )
 ```
 
+### Calculate areas 
 
 ```{r}
-fld24 |>
+strata_clipped <- strata |> 
+  st_transform(2193) |> 
+  st_difference( nztm |> st_union() ) 
+
+plot(strata_clipped)
+
+strata_areas <- strata_clipped |> 
+  mutate( Area = ( strata |> st_area() / 1e6 ) |> units::drop_units()) |> 
+  select(Name, Area) |> 
+  st_drop_geometry()
+
+```
+
+```{r}
+strata_samples <- fld24 |> 
   filter(Quality != "Bad") |> 
   group_by(Name) |> 
   summarise(n = n()) |> 
   st_drop_geometry() |> 
-  kableExtra::kable()
+  left_join(strata_areas) |> 
+  mutate(
+    Area = round(Area, 1),
+    Sites_per_area = round(n / Area, 3)
+    ) 
+```
+```{r}
+strata_samples
+```
+
+
+```{r}
+kable(strata_samples)
 ```
 
 ```{r}
@@ -264,7 +293,7 @@ ggmap_fld24_strata
 ggmap_fld24_strata + 
   annotation_custom(mark, xmin = 2031500, xmax = 2042000, ymin = 5464000, ymax = 5470000)
 
-ggsave("maps/ggmap_fld24_strata.png", width = 10, height = 6, dpi = 300)
+ggsave("maps/map_fld24_strata.png", width = 10, height = 6, dpi = 300)
 ```
 
 
@@ -338,8 +367,8 @@ ggmap_allstrata
 ggmap_allstrata + 
   annotation_custom(mark, xmin = 2031500, xmax = 2042000, ymin = 5464000, ymax = 5470000)
 
-ggsave("maps/ggmap_allstrata.png", width = 8, height = 8, dpi = 300)
-ggsave("maps/ggmap_allstrata.pdf", width = 8, height = 8)
+ggsave("maps/map_allstrata.png", width = 8, height = 8, dpi = 300)
+ggsave("maps/map_allstrata.pdf", width = 8, height = 8)
 ```
 
 ### Labelled map of 2024 sites
@@ -376,8 +405,8 @@ ggmap_fld24_labels
 ggmap_fld24_labels + 
   annotation_custom(mark, xmin = 2031500, xmax = 2042000, ymin = 5464000, ymax = 5470000)
 
-ggsave("maps/ggmap_fld24_labels.png", width = 18, height = 13, dpi = 300)
-ggsave("maps/ggmap_fld24_labels.pdf", width = 18, height = 13)
+ggsave("maps/map_fld24_labels.png", width = 18, height = 13, dpi = 300)
+ggsave("maps/map_fld24_labels.pdf", width = 18, height = 13)
 ```
 
 
@@ -420,6 +449,6 @@ ggmap_fld24
 ggmap_fld24 + 
   annotation_custom(mark, xmin = 2031500, xmax = 2042000, ymin = 5464000, ymax = 5470000)
 
-ggsave("maps/ggmap_fld24.png", width = 10, height = 6, dpi = 300)
+ggsave("maps/map_fld24.png", width = 10, height = 6, dpi = 300)
 ```
 
