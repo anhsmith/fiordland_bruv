@@ -3,6 +3,7 @@ title: "Plotting Fiordland 2024 BRUVs"
 author: "Adam Smith"
 format: 
   html:
+    self-contained: true
     toc: true
 ---
 
