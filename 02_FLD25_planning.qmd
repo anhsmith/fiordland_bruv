@@ -97,6 +97,14 @@ dstrat <- c("DZ1","DZ2","DR2","DZ3","DZ4" )
 
 
 ```{r}
+decimal_to_dm <- function(decimal_degrees) {
+  degrees <- floor(decimal_degrees)
+  minutes <- (decimal_degrees - degrees) * 60
+  return(paste0(degrees, "° ", formatC(minutes, format = "f", digits = 3), "'"))
+}
+```
+
+```{r}
 fld24_toprint <- fld24 |>
   filter(Quality != "BAD") |> 
   as_data_frame() |> 
@@ -108,7 +116,10 @@ fld24_toprint <- fld24 |>
       fct_relevel(dstrat),
     Depth,
     lat = st_coordinates(fld24)[,2] |> round(5),
-    lon = st_coordinates(fld24)[,1] |> round(5)
+    lon = st_coordinates(fld24)[,1] |> round(5),
+    lat2 = st_coordinates(fld24)[,2] |> decimal_to_dm(),
+    lon2 = st_coordinates(fld24)[,1] |> decimal_to_dm()
+    
   ) |> 
   arrange(Stratum)
 ```
