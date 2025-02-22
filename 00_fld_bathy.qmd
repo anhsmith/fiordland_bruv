@@ -16,6 +16,7 @@ library(sf)
 library(googlesheets4)
 ```
 
+# Dusky
 
 ```{r}
 fld24 <- read_sheet(
@@ -24,13 +25,13 @@ fld24 <- read_sheet(
   mutate(Depth = coalesce(`Depth sensor`,`Depth sounder`)) |> 
   st_as_sf(coords = c('Longitude','Latitude'), crs=4326)
 ```
+
 ```{r}
 fld24 |> st_transform("EPSG:27200") |> ext()
 
 lim_tamatea_nzmg <- ext( c(2000000, 2042000, 5464000, 5488000) )
 
 ```
-
 
 ```{r}
 
@@ -44,6 +45,7 @@ bathy_tamatea <- rast("C:/Users/anhsmith/OneDrive - Massey University/Work/GIS/D
 ```{r}
 plot(bathy_tamatea)
 ```
+
 ```{r}
 saveRDS(bathy_tamatea, "data/bathy_tamatea.rds")
 ```
@@ -51,4 +53,41 @@ saveRDS(bathy_tamatea, "data/bathy_tamatea.rds")
 
 ```{r}
 # spat_fiord <- st_read("C:/Users/anhsmith/OneDrive - Massey University/Work/GIS/DOC/Fiordland/PHYSIC~1/WC_ALL~2.SHP")
+```
+
+
+# Dusky and Breaksea
+
+```{r}
+fld25 <- read_sheet(
+  "https://docs.google.com/spreadsheets/d/1IQfLTiWTQnTGynuF7fUu8htJxKZuIVJw4OK6y9qRfU8",
+  sheet="FLD25") |> 
+  mutate(Depth = coalesce(`Depth sensor`,`Depth sounder`)) |> 
+  st_as_sf(coords = c('Longitude','Latitude'), crs=4326)
+```
+
+
+
+```{r}
+fld25 |> st_transform("EPSG:27200") |> ext() |> round()
+
+lim_duskbreak_nzmg <- ext( c(2001448, 2041946, 5467996, 5507114) )
+
+```
+
+```{r}
+
+bathy_duskbreak <- rast("C:/Users/anhsm/OneDrive - Primer-e/GIS/DOC/Fiordland/PHYSIC~1/10MGRIDS/wc_bathy/wc_bathy.txt") |> 
+   `crs<-`("EPSG:27200") #|> 
+  # crop(lim_duskbreak_nzmg)
+
+
+```
+
+```{r}
+plot(bathy_tamatea)
+```
+
+```{r}
+saveRDS(bathy_tamatea, "data/bathy_tamatea.rds")
 ```

@@ -1,0 +1,169 @@
+---
+title: "Plotting Fiordland 2024 BRUVs"
+author: "Adam Smith"
+format: 
+  html:
+    self-contained: true
+    toc: true
+---
+
+## Setup
+
+```{r}
+#| output: false
+library(googlesheets4)
+library(sf)
+library(sfheaders)
+library(tidyverse)
+library(southernMaps)
+library(mapview)
+library(terra)
+library(tidyterra)
+library(rcartocolor)
+library(ggnewscale)
+library(ggspatial)
+theme_set(theme_bw())
+```
+
+## Load NZ coastline data
+
+... and convert to `sf` object.
+
+```{r}
+nztm <- detailed_nz_islands |> st_as_sf()
+```
+
+## Marine reserves data
+
+```{r}
+load(file = "data/mr_fiordland.Rdata")
+```
+
+## BRUV data
+
+### Load from Google Sheet
+
+... and convert to `sf` object.
+
+```{r}
+#| output: false
+fld25 <- read_sheet(
+  "https://docs.google.com/spreadsheets/d/1IQfLTiWTQnTGynuF7fUu8htJxKZuIVJw4OK6y9qRfU8",
+  sheet="FLD25") |> 
+  mutate(Depth = coalesce(`Depth sensor`,`Depth sounder`)) |> 
+  st_as_sf(coords = c('Longitude','Latitude'), crs=4326)
+```
+
+```{r}
+mapview(fld25)
+```
+
+```{r}
+map_fiordland24 <- fld24 |> 
+  mutate(Depth = -Depth) |> 
+  mapview(zcol="Depth", layer.name = "BRUV drops (Depth)") +
+  mapview(mr_fiordland |> 
+            filter(Name %in% c(
+              "Moana Uta (Wet Jacket Arm) Marine Reserve",
+              "Taumoana (Five Finger Peninsula) Marine Reserve"
+              )), 
+          layer.name = "Marine Reserves", 
+          col.region = "yellow")
+
+map_fiordland24
+```
+
+```{r}
+saveRDS( map_fiordland24, "maps/map_fiordland24.rds")
+mapshot(map_fiordland24, url = "maps/map_fiordland24.html")
+```
+
+```{r}
+nrow(fld24)
+
+fld24 |> 
+  group_by(Quality) |> 
+  summarise(n = n())
+```
+
+```{r}
+fld24 |> 
+  group_by(`Repeat site from 2021`) |> 
+  summarise(n = n())
+```
+
+```{r}
+fld24 |> summarise(
+  min = min(Depth),
+  max = max(Depth),
+  mean = mean(Depth),
+  median = median(Depth)
+  )
+```
+
+```{r}
+fld24 |> ggplot() + aes(x=Depth) + geom_histogram()
+```
+
+## Depths
+
+```{r}
+fld24 |> 
+  ggplot() +
+  aes(x = `Depth sounder`, y = `Depth sensor`) +
+  geom_point() +
+  geom_abline(slope=1, intercept = 0)
+```
+
+## Mappy map map
+
+```{r}
+bathy_tamatea <- readRDS("data/bathy_tamatea.rds")
+```
+
+```{r}
+lim_tamatea_nzmg <- ext( c(2000000, 2042000, 5464000, 5488000) )
+```
+
+```{r}
+ggmap_fld24 <- ggplot() +
+  
+  geom_spatraster(data = bathy_tamatea) +
+  
+  geom_sf(
+    data = mr_fiordland, 
+    fill = "yellow", col = NA, alpha = .3
+    ) +
+  
+  geom_sf(data = nztm, fill='grey40', colour=NA) +
+  
+  geom_sf(
+    data = fld24,
+    size = 2
+  ) +
+  
+  scale_fill_hypso_c(name = "Depth (m)", palette="colombia_bathy") +
+  
+  new_scale_fill() +
+  
+  scale_x_continuous(limits = lim_tamatea_nzmg[1:2], 
+                     expand = c(0, 0)) +
+  scale_y_continuous(limits = lim_tamatea_nzmg[3:4], 
+                     expand = c(0, 0)) +
+  
+  annotation_scale(location = "br") +
+  
+  annotate("text", label = "Sea Through Science Ltd.")
+
+ggmap_fld24
+```
+```{r}
+mark <- png::readPNG("img/mark_blank.png") |> grid::rasterGrob(interpolate=TRUE)
+```
+```{r}
+ggmap_fld24 + 
+  annotation_custom(mark, xmin = 2031500, xmax = 2042000, ymin = 5464000, ymax = 5470000)
+
+ggsave("maps/ggmap_fld24.png", width = 10, height = 6, dpi = 300)
+```
+
