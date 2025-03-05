@@ -157,9 +157,11 @@ ggmap_fld24 <- ggplot() +
 
 ggmap_fld24
 ```
+
 ```{r}
 mark <- png::readPNG("img/mark_blank.png") |> grid::rasterGrob(interpolate=TRUE)
 ```
+
 ```{r}
 ggmap_fld24 + 
   annotation_custom(mark, xmin = 2031500, xmax = 2042000, ymin = 5464000, ymax = 5470000)

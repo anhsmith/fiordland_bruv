@@ -95,13 +95,11 @@ read_sheet(
 dstrat <- c("DZ1","DZ2","DR2","DZ3","DZ4" )
 ```
 
-
 ```{r}
 decimal_to_dm <- function(decimal_degrees) {
-  degrees <- floor(decimal_degrees)
-  minutes <- (decimal_degrees - degrees) * 60
-  return(paste0(degrees, "° ", formatC(minutes, format = "f", digits = 3), "'"))
-}
+  require(measurements)
+  conv_unit(decimal_degrees, from = "dec_deg", to = "deg_dec_min")
+  }
 ```
 
 ```{r}
