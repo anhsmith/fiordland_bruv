@@ -59,7 +59,7 @@ mapview(fld25)
 ```
 
 ```{r}
-map_fiordland24 <- fld24 |> 
+map_fiordland25 <- fld25 |> 
   mutate(Depth = -Depth) |> 
   mapview(zcol="Depth", layer.name = "BRUV drops (Depth)") +
   mapview(mr_fiordland |> 
@@ -70,30 +70,34 @@ map_fiordland24 <- fld24 |>
           layer.name = "Marine Reserves", 
           col.region = "yellow")
 
-map_fiordland24
+map_fiordland25
 ```
 
 ```{r}
-saveRDS( map_fiordland24, "maps/map_fiordland24.rds")
-mapshot(map_fiordland24, url = "maps/map_fiordland24.html")
+saveRDS( map_fiordland25, "maps/map_fiordland25.rds")
+mapshot(map_fiordland25, url = "maps/map_fiordland25.html")
 ```
 
-```{r}
-nrow(fld24)
 
-fld24 |> 
+
+### Quality
+
+```{r}
+nrow(fld25)
+
+fld25 |> 
   group_by(Quality) |> 
   summarise(n = n())
 ```
 
 ```{r}
-fld24 |> 
-  group_by(`Repeat site from 2021`) |> 
+fld25 |> 
+  group_by(`Repeat site`) |> 
   summarise(n = n())
 ```
 
 ```{r}
-fld24 |> summarise(
+fld25 |> summarise(
   min = min(Depth),
   max = max(Depth),
   mean = mean(Depth),
@@ -102,13 +106,13 @@ fld24 |> summarise(
 ```
 
 ```{r}
-fld24 |> ggplot() + aes(x=Depth) + geom_histogram()
+fld25 |> ggplot() + aes(x=Depth) + geom_histogram()
 ```
 
 ## Depths
 
 ```{r}
-fld24 |> 
+fld25 |> 
   ggplot() +
   aes(x = `Depth sounder`, y = `Depth sensor`) +
   geom_point() +
@@ -126,7 +130,7 @@ lim_tamatea_nzmg <- ext( c(2000000, 2042000, 5464000, 5488000) )
 ```
 
 ```{r}
-ggmap_fld24 <- ggplot() +
+ggmap_fld25 <- ggplot() +
   
   geom_spatraster(data = bathy_tamatea) +
   
@@ -138,7 +142,7 @@ ggmap_fld24 <- ggplot() +
   geom_sf(data = nztm, fill='grey40', colour=NA) +
   
   geom_sf(
-    data = fld24,
+    data = fld25,
     size = 2
   ) +
   
@@ -155,7 +159,7 @@ ggmap_fld24 <- ggplot() +
   
   annotate("text", label = "Sea Through Science Ltd.")
 
-ggmap_fld24
+ggmap_fld25
 ```
 
 ```{r}
@@ -163,9 +167,46 @@ mark <- png::readPNG("img/mark_blank.png") |> grid::rasterGrob(interpolate=TRUE)
 ```
 
 ```{r}
-ggmap_fld24 + 
+ggmap_fld25 + 
   annotation_custom(mark, xmin = 2031500, xmax = 2042000, ymin = 5464000, ymax = 5470000)
 
-ggsave("maps/ggmap_fld24.png", width = 10, height = 6, dpi = 300)
+# ggsave("maps/ggmap_fld25.png", width = 10, height = 6, dpi = 300)
+```
+
+### Map of sites to annotate
+
+
+```{r}
+ggmap_fld25_toannotate <- ggplot() +
+  
+  geom_spatraster(data = bathy_tamatea) +
+  
+  geom_sf(
+    data = mr_fiordland, 
+    fill = "yellow", col = NA, alpha = .3
+    ) +
+  
+  geom_sf(data = nztm, fill='grey40', colour=NA) +
+  
+  geom_sf(
+    data = fld25,
+    mapping = aes(colour = ToAnnotate),
+    size = 2
+  ) +
+  
+  scale_fill_hypso_c(name = "Depth (m)", palette="colombia_bathy") +
+  
+  new_scale_fill() +
+  
+  scale_x_continuous(limits = c(lim_tamatea_nzmg[1],2018000), 
+                     expand = c(0, 0)) +
+  scale_y_continuous(limits = lim_tamatea_nzmg[3:4], 
+                     expand = c(0, 0)) +
+  
+  annotation_scale(location = "br") +
+  
+  annotate("text", label = "Sea Through Science Ltd.")
+
+ggmap_fld25_toannotate
 ```
 
