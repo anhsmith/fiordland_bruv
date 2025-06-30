@@ -16,6 +16,11 @@ library(sf)
 library(googlesheets4)
 ```
 
+```{r}
+fld_raster <- rast("C:/Users/anhsm/OneDrive - Primer-e/GIS/DOC/Fiordland/PHYSIC~1/10MGRIDS/wc_bathy/wc_bathy.txt")
+```
+
+
 # Dusky
 
 ```{r}
@@ -31,15 +36,16 @@ fld24 |> st_transform("EPSG:27200") |> ext()
 
 lim_tamatea_nzmg <- ext( c(2000000, 2042000, 5464000, 5488000) )
 
+lim_duskybreaksea <- ext(c(xmin= 1995923, xmax = 2042666, ymin = 5464579, ymax = 5507907))
 ```
 
 ```{r}
 
-bathy_tamatea <- rast("C:/Users/anhsmith/OneDrive - Massey University/Work/GIS/DOC/Fiordland/PHYSIC~1/10MGRIDS/wc_bathy/wc_bathy.txt") |> 
+bathy_tamatea <- fld_raster |> 
    `crs<-`("EPSG:27200") |> 
   crop(lim_tamatea_nzmg)
 
-
+bathy_tamatea[bathy_tamatea < -450] <- NA
 ```
 
 ```{r}
@@ -71,23 +77,24 @@ fld25 <- read_sheet(
 ```{r}
 fld25 |> st_transform("EPSG:27200") |> ext() |> round()
 
-lim_duskbreak_nzmg <- ext( c(2001448, 2041946, 5467996, 5507114) )
+lim_duskbreak_nzmg <- ext(c(xmin= 1995923, xmax = 2042666, ymin = 5464579, ymax = 5507907))
 
 ```
 
 ```{r}
 
-bathy_duskbreak <- rast("C:/Users/anhsm/OneDrive - Primer-e/GIS/DOC/Fiordland/PHYSIC~1/10MGRIDS/wc_bathy/wc_bathy.txt") |> 
-   `crs<-`("EPSG:27200") #|> 
-  # crop(lim_duskbreak_nzmg)
+bathy_duskbreak <- fld_raster |> 
+   `crs<-`("EPSG:27200") |> 
+  crop(lim_duskbreak_nzmg)
 
+bathy_duskbreak[bathy_duskbreak < -450] <- NA
 
 ```
 
 ```{r}
-plot(bathy_tamatea)
+plot(bathy_duskbreak)
 ```
 
 ```{r}
-saveRDS(bathy_tamatea, "data/bathy_tamatea.rds")
+saveRDS(bathy_duskbreak, "data/bathy_duskbreak.rds")
 ```

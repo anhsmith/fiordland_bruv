@@ -1,5 +1,5 @@
 ---
-title: "Plotting Fiordland 2024 BRUVs"
+title: "Planning annotations of Fiordland 2025 BRUVs"
 author: "Adam Smith"
 format: 
   html:
@@ -22,7 +22,13 @@ library(tidyterra)
 library(rcartocolor)
 library(ggnewscale)
 library(ggspatial)
+library(ggrepel)
 theme_set(theme_bw())
+```
+
+
+```{r}
+mark <- png::readPNG("img/mark_blank.png") |> grid::rasterGrob(interpolate=TRUE)
 ```
 
 ## Load NZ coastline data
@@ -122,17 +128,19 @@ fld25 |>
 ## Mappy map map
 
 ```{r}
-bathy_tamatea <- readRDS("data/bathy_tamatea.rds")
+bathy_duskbreak <- readRDS("data/bathy_duskbreak.rds")
 ```
 
 ```{r}
 lim_tamatea_nzmg <- ext( c(2000000, 2042000, 5464000, 5488000) )
+lim_duskbreak <- ext(c(xmin= 1995923, xmax = 2042666, ymin = 5464579, ymax = 5507907))
+    
 ```
 
 ```{r}
 ggmap_fld25 <- ggplot() +
   
-  geom_spatraster(data = bathy_tamatea) +
+  geom_spatraster(data = bathy_duskbreak) +
   
   geom_sf(
     data = mr_fiordland, 
@@ -143,16 +151,17 @@ ggmap_fld25 <- ggplot() +
   
   geom_sf(
     data = fld25,
-    size = 2
+    size = 2,
+    alpha = .6
   ) +
   
   scale_fill_hypso_c(name = "Depth (m)", palette="colombia_bathy") +
   
   new_scale_fill() +
   
-  scale_x_continuous(limits = lim_tamatea_nzmg[1:2], 
+  scale_x_continuous(limits = lim_duskbreak[1:2], 
                      expand = c(0, 0)) +
-  scale_y_continuous(limits = lim_tamatea_nzmg[3:4], 
+  scale_y_continuous(limits = lim_duskbreak[3:4], 
                      expand = c(0, 0)) +
   
   annotation_scale(location = "br") +
@@ -167,19 +176,31 @@ mark <- png::readPNG("img/mark_blank.png") |> grid::rasterGrob(interpolate=TRUE)
 ```
 
 ```{r}
+#| fig-height: 6
+#| fig-width: 7
+
 ggmap_fld25 + 
-  annotation_custom(mark, xmin = 2031500, xmax = 2042000, ymin = 5464000, ymax = 5470000)
+  annotation_custom(mark, xmin = 2028000, xmax = 2042000, ymin = 5464000, ymax = 5472000)
 
 # ggsave("maps/ggmap_fld25.png", width = 10, height = 6, dpi = 300)
 ```
 
-### Map of sites to annotate
+```{r}
+ggsave(filename="maps/fld25_map.png", height = 6, width=7)
+ggsave(filename="maps/fld25_map.pdf", height = 6, width=7)
+```
 
+### Maps of sites to annotate
+
+#### Larger
 
 ```{r}
+#| fig-height: 6
+#| fig-width: 5
+
 ggmap_fld25_toannotate <- ggplot() +
   
-  geom_spatraster(data = bathy_tamatea) +
+  geom_spatraster(data = bathy_duskbreak) +
   
   geom_sf(
     data = mr_fiordland, 
@@ -189,14 +210,17 @@ ggmap_fld25_toannotate <- ggplot() +
   geom_sf(data = nztm, fill='grey40', colour=NA) +
   
   geom_sf(
-    data = fld25,
-    mapping = aes(colour = ToAnnotate),
+    data = fld25 |> 
+      mutate(Annotated = replace_na(ToAnnotate, "No")),
+    mapping = aes(colour = Annotated),
     size = 2
   ) +
   
   scale_fill_hypso_c(name = "Depth (m)", palette="colombia_bathy") +
   
   new_scale_fill() +
+  
+  scale_color_manual(values = c("cornsilk2", "darkorange1")) +
   
   scale_x_continuous(limits = c(lim_tamatea_nzmg[1],2018000), 
                      expand = c(0, 0)) +
@@ -205,8 +229,85 @@ ggmap_fld25_toannotate <- ggplot() +
   
   annotation_scale(location = "br") +
   
-  annotate("text", label = "Sea Through Science Ltd.")
+  annotation_custom(
+    mark, 
+    xmin = 2011000, 
+    xmax = 2018500, 
+    ymin = 5463600, 
+    ymax = 5469600
+    ) +
+  
+  xlab("") + ylab("")
 
 ggmap_fld25_toannotate
 ```
 
+```{r}
+ggsave(filename="maps/fld25_toannotate.png", height = 6, width=5)
+ggsave(filename="maps/fld25_toannotate.pdf", height = 6, width=5)
+```
+
+#### Smaller
+
+```{r}
+#| fig-height: 5
+#| fig-width: 6
+
+ggmap_fld25_toannotate2 <- ggplot() +
+  
+  geom_spatraster(data = bathy_duskbreak) +
+  
+  geom_sf(
+    data = mr_fiordland, 
+    fill = "yellow", col = NA, alpha = .3
+    ) +
+  
+  geom_sf(data = nztm, fill='grey40', colour=NA) +
+  
+  geom_sf(
+    data = fld25 |> filter(ToAnnotate == "Yes"),
+    colour = "darkorange1",
+    size = 2
+  ) +
+  
+  scale_fill_hypso_c(name = "Depth (m)", palette="colombia_bathy") +
+  
+  new_scale_fill() +
+  
+  scale_x_continuous(limits = c(2001000,2012000), 
+                     expand = c(0, 0)) +
+  scale_y_continuous(limits = c(5474000, lim_tamatea_nzmg[4]-4000), 
+                     expand = c(0, 0)) +
+  
+  annotation_scale(location = "tr") +
+  
+  annotation_custom(
+    mark, 
+    xmin = 2011000, 
+    xmax = 2018500, 
+    ymin = 5463600, 
+    ymax = 5469600
+    ) +
+  
+  geom_label_repel(
+    data = fld25 |> filter(ToAnnotate == "Yes"),
+    aes(label = SiteID, geometry = geometry), 
+    stat = "sf_coordinates",
+    size = 2.2,
+    max.overlaps = 12,
+    alpha = 0.7,
+    box.padding = 0.01, 
+    point.padding = 0.05,
+    min.segment.length = 5) +
+  
+  xlab("") + ylab("") + 
+  
+  theme(legend.position = "none")
+
+ggmap_fld25_toannotate2
+```
+
+```{r}
+ggsave(filename="maps/fld25_toannotate2.png", height = 5, width=6)
+ggsave(filename="maps/fld25_toannotate2.pdf", height = 5, width=6)
+```
