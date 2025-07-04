@@ -23,6 +23,7 @@ library(rcartocolor)
 library(ggnewscale)
 library(ggspatial)
 library(ggrepel)
+library(patchwork)
 theme_set(theme_bw())
 ```
 
@@ -310,4 +311,21 @@ ggmap_fld25_toannotate2
 ```{r}
 ggsave(filename="maps/fld25_toannotate2.png", height = 5, width=6)
 ggsave(filename="maps/fld25_toannotate2.pdf", height = 5, width=6)
+```
+
+
+```{r}
+#| fig-width: 6
+#| fig-height: 10
+
+(ggmap_fld25_toannotate) /
+  ggmap_fld25_toannotate2 +
+  plot_layout(guides = "collect")
+
+```
+
+
+```{r}
+ggsave(filename="maps/fld25_toannotate_both.png", height = 10, width=6)
+ggsave(filename="maps/fld25_toannotate_both.pdf", height = 10, width=6)
 ```
