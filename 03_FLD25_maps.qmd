@@ -244,8 +244,8 @@ ggmap_fld25_toannotate
 ```
 
 ```{r}
-ggsave(filename="maps/fld25_toannotate.png", height = 6, width=5)
-ggsave(filename="maps/fld25_toannotate.pdf", height = 6, width=5)
+# ggsave(filename="maps/fld25_toannotate.png", height = 6, width=5)
+# ggsave(filename="maps/fld25_toannotate.pdf", height = 6, width=5)
 ```
 
 #### Smaller
@@ -254,7 +254,7 @@ ggsave(filename="maps/fld25_toannotate.pdf", height = 6, width=5)
 #| fig-height: 5
 #| fig-width: 6
 
-ggmap_fld25_toannotate2 <- ggplot() +
+fld25_smaller <- ggplot() +
   
   geom_spatraster(data = bathy_duskbreak) +
   
@@ -264,12 +264,6 @@ ggmap_fld25_toannotate2 <- ggplot() +
     ) +
   
   geom_sf(data = nztm, fill='grey40', colour=NA) +
-  
-  geom_sf(
-    data = fld25 |> filter(ToAnnotate == "Yes"),
-    colour = "darkorange1",
-    size = 2
-  ) +
   
   scale_fill_hypso_c(name = "Depth (m)", palette="colombia_bathy") +
   
@@ -290,6 +284,23 @@ ggmap_fld25_toannotate2 <- ggplot() +
     ymax = 5469600
     ) +
   
+  xlab("") + ylab("") 
+
+fld25_smaller
+```
+
+```{r}
+#| fig-height: 5
+#| fig-width: 6
+
+ggmap_fld25_toannotate2 <- fld25_smaller +
+  
+  geom_sf(
+    data = fld25 |> filter(ToAnnotate == "Yes"),
+    colour = "darkorange1",
+    size = 2
+  ) +
+
   geom_label_repel(
     data = fld25 |> filter(ToAnnotate == "Yes"),
     aes(label = SiteID, geometry = geometry), 
@@ -299,9 +310,7 @@ ggmap_fld25_toannotate2 <- ggplot() +
     alpha = 0.7,
     box.padding = 0.01, 
     point.padding = 0.05,
-    min.segment.length = 5) +
-  
-  xlab("") + ylab("") + 
+    min.segment.length = 5) + 
   
   theme(legend.position = "none")
 
@@ -326,6 +335,54 @@ ggsave(filename="maps/fld25_toannotate2.pdf", height = 5, width=6)
 
 
 ```{r}
-ggsave(filename="maps/fld25_toannotate_both.png", height = 10, width=6)
-ggsave(filename="maps/fld25_toannotate_both.pdf", height = 10, width=6)
+# ggsave(filename="maps/fld25_toannotate_both.png", height = 10, width=6)
+# ggsave(filename="maps/fld25_toannotate_both.pdf", height = 10, width=6)
+```
+
+### Map of maxn blue cod
+
+```{r}
+#| fig-height: 5
+#| fig-width: 6
+
+ggmap_fld25_maxnbc <- fld25_smaller +
+  
+  geom_sf(
+    data = fld25 |> filter(ToAnnotate == "Yes"),
+    colour = "blue4",
+    mapping = aes(size = maxn_bluecod),
+    alpha = .6
+  ) 
+
+ggmap_fld25_maxnbc
+```
+
+
+```{r}
+# ggsave(filename="maps/fld25_maxnbc.png", height = 5, width=6)
+# ggsave(filename="maps/fld25_maxnbc.pdf", height = 5, width=6)
+```
+
+
+### Map of species richness
+
+```{r}
+#| fig-height: 5
+#| fig-width: 6
+
+ggmap_fld25_spr <- fld25_smaller +
+  
+  geom_sf(
+    data = fld25 |> filter(ToAnnotate == "Yes"),
+    colour = "coral1",
+    mapping = aes(size = species_richness),
+    alpha = .6
+  ) 
+
+ggmap_fld25_spr
+```
+
+```{r}
+# ggsave(filename="maps/fld25_spr.png", height = 5, width=6)
+# ggsave(filename="maps/fld25_spr.pdf", height = 5, width=6)
 ```
