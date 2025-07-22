@@ -1,5 +1,5 @@
 ---
-title: "Planning annotations of Fiordland 2025 BRUVs"
+title: "Annotations of Fiordland 2025 BRUVs"
 author: "Adam Smith"
 format: 
   html:
@@ -20,11 +20,15 @@ library(mapview)
 library(terra)
 library(tidyterra)
 library(rcartocolor)
+library(wesanderson)
 library(ggnewscale)
 library(ggspatial)
 library(ggrepel)
 library(patchwork)
 theme_set(theme_bw())
+
+# wesanderson::wes_palettes$GrandBudapest1 but with darker sand colour
+habcols <- c("#B2855B", "#FD6467","#5B1A18") 
 ```
 
 
@@ -57,7 +61,13 @@ load(file = "data/mr_fiordland.Rdata")
 fld25 <- read_sheet(
   "https://docs.google.com/spreadsheets/d/1IQfLTiWTQnTGynuF7fUu8htJxKZuIVJw4OK6y9qRfU8",
   sheet="FLD25") |> 
-  mutate(Depth = coalesce(`Depth sensor`,`Depth sounder`)) |> 
+  mutate(
+    Depth = coalesce(`Depth sensor`,`Depth sounder`),
+    HabitatClass = fct_relevel(
+      HabitatClass,
+      c("Sand", "Mixed", "Reef")
+      )
+    ) |> 
   st_as_sf(coords = c('Longitude','Latitude'), crs=4326)
 ```
 
@@ -199,7 +209,7 @@ ggsave(filename="maps/fld25_map.pdf", height = 6, width=7)
 #| fig-height: 6
 #| fig-width: 5
 
-ggmap_fld25_toannotate <- ggplot() +
+ggmap_fld25_annotated <- ggplot() +
   
   geom_spatraster(data = bathy_duskbreak) +
   
@@ -211,8 +221,7 @@ ggmap_fld25_toannotate <- ggplot() +
   geom_sf(data = nztm, fill='grey40', colour=NA) +
   
   geom_sf(
-    data = fld25 |> 
-      mutate(Annotated = replace_na(ToAnnotate, "No")),
+    data = fld25,
     mapping = aes(colour = Annotated),
     size = 2
   ) +
@@ -221,31 +230,31 @@ ggmap_fld25_toannotate <- ggplot() +
   
   new_scale_fill() +
   
-  scale_color_manual(values = c("cornsilk2", "darkorange1")) +
+  scale_color_manual(values = c("cornsilk2","darkorange1")) +
   
   scale_x_continuous(limits = c(lim_tamatea_nzmg[1],2018000), 
                      expand = c(0, 0)) +
-  scale_y_continuous(limits = lim_tamatea_nzmg[3:4], 
+  scale_y_continuous(limits = c(5466000, lim_tamatea_nzmg[4]), 
                      expand = c(0, 0)) +
   
   annotation_scale(location = "br") +
   
   annotation_custom(
     mark, 
-    xmin = 2011000, 
-    xmax = 2018500, 
-    ymin = 5463600, 
-    ymax = 5469600
+    xmin = 2011400, 
+    xmax = 2018200, 
+    ymin = 5482700, 
+    ymax = 5491000
     ) +
   
   xlab("") + ylab("")
 
-ggmap_fld25_toannotate
+ggmap_fld25_annotated
 ```
 
 ```{r}
-# ggsave(filename="maps/fld25_toannotate.png", height = 6, width=5)
-# ggsave(filename="maps/fld25_toannotate.pdf", height = 6, width=5)
+ggsave(filename="maps/fld25_annotated.png", height = 6, width=5)
+ggsave(filename="maps/fld25_annotated.pdf", height = 6, width=5)
 ```
 
 #### Smaller
@@ -274,14 +283,14 @@ fld25_smaller <- ggplot() +
   scale_y_continuous(limits = c(5474000, lim_tamatea_nzmg[4]-4000), 
                      expand = c(0, 0)) +
   
-  annotation_scale(location = "tr") +
+  annotation_scale(location = "br") +
   
   annotation_custom(
     mark, 
-    xmin = 2011000, 
-    xmax = 2018500, 
-    ymin = 5463600, 
-    ymax = 5469600
+    xmin = 2008400, 
+    xmax = 2012000, 
+    ymin = 5482700, 
+    ymax = 5484200
     ) +
   
   xlab("") + ylab("") 
@@ -289,20 +298,32 @@ fld25_smaller <- ggplot() +
 fld25_smaller
 ```
 
+
 ```{r}
 #| fig-height: 5
 #| fig-width: 6
 
-ggmap_fld25_toannotate2 <- fld25_smaller +
+ggmap_fld25_annotated2_nolabs <- fld25_smaller +
   
   geom_sf(
-    data = fld25 |> filter(ToAnnotate == "Yes"),
+    data = fld25 |> filter(Annotated == "Yes"),
     colour = "darkorange1",
     size = 2
   ) +
 
+  theme(legend.position = "none")
+
+ggmap_fld25_annotated2_nolabs
+```
+
+```{r}
+#| fig-height: 5
+#| fig-width: 6
+
+ggmap_fld25_annotated2 <- ggmap_fld25_annotated2_nolabs +
+  
   geom_label_repel(
-    data = fld25 |> filter(ToAnnotate == "Yes"),
+    data = fld25 |> filter(Annotated == "Yes"),
     aes(label = SiteID, geometry = geometry), 
     stat = "sf_coordinates",
     size = 2.2,
@@ -314,12 +335,12 @@ ggmap_fld25_toannotate2 <- fld25_smaller +
   
   theme(legend.position = "none")
 
-ggmap_fld25_toannotate2
+ggmap_fld25_annotated2
 ```
 
 ```{r}
-ggsave(filename="maps/fld25_toannotate2.png", height = 5, width=6)
-ggsave(filename="maps/fld25_toannotate2.pdf", height = 5, width=6)
+ggsave(filename="maps/fld25_annotated2.png", height = 5, width=6)
+ggsave(filename="maps/fld25_annotated2.pdf", height = 5, width=6)
 ```
 
 
@@ -327,62 +348,121 @@ ggsave(filename="maps/fld25_toannotate2.pdf", height = 5, width=6)
 #| fig-width: 6
 #| fig-height: 10
 
-(ggmap_fld25_toannotate) /
-  ggmap_fld25_toannotate2 +
+(ggmap_fld25_annotated) /
+  ggmap_fld25_annotated2 +
   plot_layout(guides = "collect")
 
 ```
 
 
 ```{r}
-# ggsave(filename="maps/fld25_toannotate_both.png", height = 10, width=6)
-# ggsave(filename="maps/fld25_toannotate_both.pdf", height = 10, width=6)
+ggsave(filename="maps/fld25_annotated_both.png", height = 10, width=6)
+ggsave(filename="maps/fld25_annotated_both.pdf", height = 10, width=6)
 ```
 
 ### Map of maxn blue cod
 
 ```{r}
-#| fig-height: 5
-#| fig-width: 6
+fld25_plotdata <- fld25 %>% 
+  filter(ToAnnotate == "Done") %>% 
+  mutate(
+    `Blue cod` = maxn_bluecod,
+    `Species richness` = species_richness,
+    `Habitat class` = HabitatClass
+  )
+
+```
+
+
+```{r}
+#| fig-height: 6
+#| fig-width: 7
 
 ggmap_fld25_maxnbc <- fld25_smaller +
-  
+
+  # Main layer: circles scaled by Blue cod abundance
   geom_sf(
-    data = fld25 |> filter(ToAnnotate == "Yes"),
-    colour = "blue4",
-    mapping = aes(size = maxn_bluecod),
-    alpha = .6
-  ) 
+    data = fld25_plotdata |> filter(`Blue cod` > 0),
+    mapping = aes(
+      size = `Blue cod`,
+      colour = `Habitat class`
+    ),
+    alpha = 0.8
+  ) +
+
+  # Add x marks for zero Blue cod
+  geom_sf(
+    data = fld25_plotdata |> filter(`Blue cod` == 0),
+    mapping = aes(colour = `Habitat class`),
+    shape = 4,         # 'x' shape
+    size = 2.1,
+    stroke = 1.5,
+    alpha = 0.8,
+    show.legend = FALSE  # suppress legend for this layer
+  ) +
+
+  scale_colour_manual(values = habcols) +
+  guides(
+    size = guide_legend(title = "Blue cod")
+  )+
+  ggtitle("Blue cod abundance")
 
 ggmap_fld25_maxnbc
 ```
 
 
 ```{r}
-# ggsave(filename="maps/fld25_maxnbc.png", height = 5, width=6)
-# ggsave(filename="maps/fld25_maxnbc.pdf", height = 5, width=6)
+ggsave(filename="maps/fld25_maxnbc.png", height = 5, width=6)
+ggsave(filename="maps/fld25_maxnbc.pdf", height = 5, width=6)
 ```
 
 
 ### Map of species richness
 
 ```{r}
-#| fig-height: 5
-#| fig-width: 6
+#| fig-height: 6
+#| fig-width: 7
 
 ggmap_fld25_spr <- fld25_smaller +
   
   geom_sf(
-    data = fld25 |> filter(ToAnnotate == "Yes"),
-    colour = "coral1",
-    mapping = aes(size = species_richness),
-    alpha = .6
-  ) 
+    data = fld25_plotdata,
+    mapping = aes(
+      size = `Species richness`,
+      colour = `Habitat class`
+      ),
+    alpha = .8
+  ) +
+  
+  scale_colour_manual(values = habcols) +
+  ggtitle("Species richness")
 
 ggmap_fld25_spr
 ```
 
 ```{r}
-# ggsave(filename="maps/fld25_spr.png", height = 5, width=6)
-# ggsave(filename="maps/fld25_spr.pdf", height = 5, width=6)
+ggsave(filename="maps/fld25_spr.png", height = 5, width=6)
+ggsave(filename="maps/fld25_spr.pdf", height = 5, width=6)
+```
+
+### BC and SPR together
+
+
+```{r}
+#| fig-height: 10
+#| fig-width: 7
+
+
+ggmap_fld25_maxnbc2 <- ggmap_fld25_maxnbc + guides(colour = "none") 
+
+ggmap_fld25_maxnbc2 / 
+  ggmap_fld25_spr +
+  plot_layout(guides = "collect", axes = "collect")
+```
+
+
+
+```{r}
+ggsave(filename="maps/fld25_bcspr.png", height = 10, width=7)
+ggsave(filename="maps/fld25_bcspr.pdf", height = 10, width=7)
 ```
