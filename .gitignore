@@ -8,3 +8,5 @@
 .quarto
 /.quarto/
 CLAUDE.local.md
+
+**/*.quarto_ipynb

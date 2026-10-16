@@ -1,0 +1,146 @@
+---
+title: "Schematic of the pot–BRUV crossover design"
+author: "Adam Smith"
+format:
+  html:
+    self-contained: true
+knitr:
+  opts_chunk:
+    dev: "svg"
+    fig.path: "plots/04/"
+---
+
+## Setup
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+
+gear_cols <- c(
+  Pot  = "#d95f02",
+  BRUV = "#1b9e77"
+)
+```
+
+## Design
+
+```{r}
+#| label: make-design
+
+design <- expand_grid(
+  visit = c(
+    "Visit 1",
+    "Visit 2 (at least 24 h later)"
+  ),
+  site  = 1:6
+) |>
+  mutate(
+    gear = case_when(
+      visit == "Visit 1" & site %% 2 == 1 ~ "Pot",
+      visit == "Visit 1"                  ~ "BRUV",
+      site %% 2 == 1                      ~ "BRUV",
+      TRUE                                ~ "Pot"
+    ),
+    gear = factor(
+      gear,
+      levels = c("Pot", "BRUV")
+    ),
+    x    = site * 400
+  )
+
+shore <- tibble(
+  x = seq(0, 2800, by = 20)
+) |>
+  mutate(
+    y = 0.55 + 0.06 * sin(x / 180)
+  )
+```
+
+## Schematic
+
+```{r}
+#| label: fig-design-schematic
+#| fig-width: 5.5
+#| fig-height: 4.5
+
+design |>
+  ggplot() +
+  geom_ribbon(
+    data        = shore,
+    mapping     = aes(
+      x    = x,
+      ymin = y,
+      ymax = 1
+    ),
+    fill        = "grey60",
+    inherit.aes = FALSE
+  ) +
+  aes(
+    x      = x,
+    y      = 0.35,
+    colour = gear,
+    shape  = gear
+  ) +
+  geom_point(size = 7) +
+  geom_text(
+    aes(label = site),
+    colour = "white",
+    size   = 3.5
+  ) +
+  annotate(
+    "segment",
+    x     = 400,
+    xend  = 800,
+    y     = 0.12,
+    yend  = 0.12,
+    arrow = arrow(
+      ends   = "both",
+      length = unit(2, "mm")
+    )
+  ) +
+  annotate(
+    "text",
+    x     = 600,
+    y     = 0.04,
+    label = "≥ 400 m",
+    size  = 3.5
+  ) +
+  facet_wrap(
+    ~ visit,
+    ncol = 1
+  ) +
+  scale_colour_manual(values = gear_cols) +
+  scale_shape_manual(
+    values = c(
+      Pot  = 15,
+      BRUV = 16
+    )
+  ) +
+  coord_cartesian(
+    xlim = c(150, 2650),
+    ylim = c(0, 1)
+  ) +
+  labs(
+    x       = NULL,
+    y       = NULL,
+    colour  = NULL,
+    shape   = NULL,
+    caption = "Soak time 65 min; all stations shallower than 40 m"
+  ) +
+  theme_void(base_size = 14) +
+  theme(
+    legend.position  = "top",
+    strip.text       = element_text(
+      face   = "bold",
+      hjust  = 0,
+      margin = margin(b = 4)
+    ),
+    panel.background = element_rect(
+      fill   = "#dbeafe",
+      colour = NA
+    ),
+    panel.spacing    = unit(4, "mm")
+  )
+```

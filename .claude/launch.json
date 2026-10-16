@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ms2-deck",
+      "runtimeExecutable": "C:\\Program Files\\RStudio\\resources\\app\\bin\\quarto\\bin\\quarto.exe",
+      "runtimeArgs": ["preview", "slides/MS2_methods_meeting.qmd", "--port", "4321", "--no-browser"],
+      "port": 4321
+    }
+  ]
+}
